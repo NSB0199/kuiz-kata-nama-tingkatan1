@@ -1,0 +1,602 @@
+
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kuiz Interaktif Kata Nama - Tingkatan 1</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: 'Trebuchet MS', sans-serif;
+      background: linear-gradient(135deg, #eff6ff, #fdf2f8, #fefce8);
+    }
+    .question-card {
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .question-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(100, 116, 139, 0.12);
+    }
+    .option-label:has(input:checked) {
+      border-color: #6366f1;
+      background: #eef2ff;
+    }
+    .correct {
+      border: 2px solid #22c55e !important;
+      background: #f0fdf4 !important;
+    }
+    .incorrect {
+      border: 2px solid #f87171 !important;
+      background: #fef2f2 !important;
+    }
+    @media print {
+      body { background: white !important; }
+      .no-print { display: none !important; }
+      #certificate {
+        display: block !important;
+        box-shadow: none !important;
+        border: 3px solid #6366f1;
+        break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-slate-800">
+
+  <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white px-4 py-10 text-center">
+    <div class="max-w-4xl mx-auto">
+      <div class="text-5xl mb-3">📚 ✨ 📝</div>
+      <h1 class="text-3xl md:text-5xl font-extrabold mb-3">
+        Kuiz Interaktif Kata Nama
+      </h1>
+      <p class="text-lg md:text-xl font-semibold">Bahasa Melayu | Tingkatan 1</p>
+      <p class="mt-3 text-indigo-100">Jom uji pengetahuan anda! 🌟</p>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-4 py-8">
+
+    <!-- Maklumat murid -->
+    <section class="bg-white rounded-2xl shadow-lg p-6 mb-8 border-t-4 border-indigo-500">
+      <h2 class="text-2xl font-bold text-indigo-700 mb-2">
+        👋 Maklumat Murid
+      </h2>
+      <p class="text-slate-500 mb-5">Sila isi maklumat anda sebelum menjawab.</p>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div>
+          <label for="studentName" class="block font-bold mb-2">
+            Nama penuh murid
+          </label>
+          <input
+            id="studentName"
+            type="text"
+            maxlength="100"
+            autocomplete="name"
+            placeholder="Masukkan nama anda"
+            class="w-full rounded-xl border-2 border-slate-200 p-3 focus:outline-none focus:border-indigo-500"
+            required
+          >
+        </div>
+
+        <div>
+          <label for="studentClass" class="block font-bold mb-2">
+            Kelas
+          </label>
+          <input
+            id="studentClass"
+            type="text"
+            maxlength="50"
+            placeholder="Contoh: 1 Bestari"
+            class="w-full rounded-xl border-2 border-slate-200 p-3 focus:outline-none focus:border-indigo-500"
+            required
+          >
+        </div>
+      </div>
+
+      <div class="mt-5 rounded-xl bg-indigo-50 p-4 text-indigo-800">
+        <p><strong>📌 Topik:</strong> Kata Nama</p>
+        <p><strong>🎯 Jumlah soalan:</strong> 20 soalan</p>
+        <p><strong>🏆 Markah penuh:</strong> 20 markah</p>
+      </div>
+    </section>
+
+    <!-- Kawasan soalan -->
+    <form id="quizForm" novalidate>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+        <h2 class="text-2xl font-extrabold text-indigo-800">
+          🎯 Jom Menjawab!
+        </h2>
+        <span class="bg-purple-100 text-purple-800 font-bold px-4 py-2 rounded-full">
+          20 Soalan
+        </span>
+      </div>
+
+      <p class="mb-6 text-slate-600">
+        Pilih satu jawapan yang paling tepat bagi setiap soalan. Selamat menjawab! 💪
+      </p>
+
+      <div id="questionsContainer" class="space-y-5"></div>
+
+      <div id="formError"
+           role="alert"
+           aria-live="polite"
+           class="hidden mt-6 rounded-xl bg-red-100 text-red-800 p-4 font-semibold">
+      </div>
+
+      <div class="mt-8 text-center no-print">
+        <button
+          id="submitButton"
+          type="submit"
+          class="w-full md:w-auto rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 px-10 py-4 text-lg font-extrabold text-white shadow-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-4 focus:ring-indigo-300"
+        >
+          ✅ Hantar Jawapan & Semak Markah
+        </button>
+        <p class="text-sm text-slate-500 mt-3">
+          Pastikan semua soalan telah dijawab sebelum menghantar.
+        </p>
+      </div>
+    </form>
+
+    <!-- Keputusan -->
+    <section id="resultSection"
+             class="hidden mt-10"
+             aria-live="polite">
+      <div class="bg-white rounded-3xl shadow-xl p-6 md:p-8 text-center border-t-8 border-indigo-500">
+        <div id="resultEmoji" class="text-6xl mb-3">🏆</div>
+        <h2 class="text-3xl font-extrabold text-indigo-800 mb-2">
+          Keputusan Kuiz Anda
+        </h2>
+        <p id="resultGreeting" class="text-lg text-slate-600 mb-6"></p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="rounded-2xl bg-indigo-50 p-5">
+            <p class="font-semibold text-indigo-700">Markah</p>
+            <p id="scoreText" class="text-4xl font-extrabold text-indigo-800">0/20</p>
+          </div>
+          <div class="rounded-2xl bg-emerald-50 p-5">
+            <p class="font-semibold text-emerald-700">Peratus</p>
+            <p id="percentageText" class="text-4xl font-extrabold text-emerald-800">0%</p>
+          </div>
+          <div class="rounded-2xl bg-amber-50 p-5">
+            <p class="font-semibold text-amber-700">Jawapan betul</p>
+            <p id="correctText" class="text-4xl font-extrabold text-amber-800">0</p>
+          </div>
+        </div>
+
+        <p id="resultMessage"
+           class="mt-6 text-xl font-bold text-purple-700"></p>
+      </div>
+
+      <!-- Sijil pencapaian -->
+      <section id="certificate"
+               class="mt-8 rounded-3xl border-4 border-indigo-400 bg-white p-6 md:p-10 text-center shadow-xl">
+        <div class="text-5xl mb-3">🏅 🎓 🏅</div>
+        <p class="uppercase tracking-widest text-sm font-bold text-indigo-600">
+          Sijil Pencapaian
+        </p>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-indigo-800 mt-3">
+          TAHNIAH!
+        </h2>
+        <p class="text-slate-500 mt-2">Sijil ini diberikan kepada</p>
+
+        <p id="certName"
+           class="text-2xl md:text-3xl font-extrabold text-purple-700 mt-4 break-words">
+        </p>
+
+        <p class="text-slate-600 mt-2">Kelas: <strong id="certClass"></strong></p>
+        <p class="mt-6 text-lg text-slate-600">
+          kerana telah menyertai kuiz interaktif
+        </p>
+        <h3 id="certTopic"
+            class="text-2xl font-extrabold text-indigo-700 mt-2">
+          Kata Nama
+        </h3>
+
+        <div class="my-6 rounded-2xl bg-indigo-50 p-5">
+          <p class="text-slate-600 font-semibold">Pencapaian anda</p>
+          <p id="certScore" class="text-4xl font-extrabold text-indigo-800 mt-2">
+            0/20
+          </p>
+          <p id="certPercentage" class="text-lg font-bold text-purple-700 mt-1">
+            0%
+          </p>
+        </div>
+
+        <p id="certDate" class="text-slate-500"></p>
+        <p class="mt-6 font-bold text-indigo-700">
+          Teruskan usaha dan jadilah murid yang cemerlang! 🌟
+        </p>
+        <div class="mt-8 border-t border-indigo-200 pt-4 text-sm text-slate-500">
+          Bahasa Melayu • Tingkatan 1
+        </div>
+      </section>
+
+      <div class="mt-6 flex flex-col sm:flex-row justify-center gap-3 no-print">
+        <button
+          type="button"
+          id="printButton"
+          class="rounded-full bg-emerald-600 px-7 py-3 font-bold text-white hover:bg-emerald-700"
+        >
+          🖨️ Cetak / Simpan Sijil
+        </button>
+        <button
+          type="button"
+          id="retryButton"
+          class="rounded-full bg-amber-500 px-7 py-3 font-bold text-white hover:bg-amber-600"
+        >
+          🔄 Cuba Lagi
+        </button>
+      </div>
+    </section>
+
+    <footer class="text-center text-slate-500 text-sm mt-10 mb-5">
+      <p>💖 Belajar dengan gembira, berjaya bersama-sama!</p>
+      <p class="mt-1">Kuiz Bahasa Melayu • Tingkatan 1</p>
+    </footer>
+  </main>
+
+  <script>
+    // Bank soalan: guru boleh mengubah soalan dan pilihan jawapan di sini.
+    // Indeks jawapan bermula dari 0: A=0, B=1, C=2, D=3.
+    const questions = [
+      {
+        q: "Antara berikut, yang manakah kata nama khas?",
+        options: ["sekolah", "Sungai Pahang", "guru", "kucing"],
+        answer: 1,
+        explanation: "Sungai Pahang ialah nama khusus bagi sungai dan ditulis dengan huruf besar pada unsur nama khas."
+      },
+      {
+        q: "Pilih kata nama am yang betul.",
+        options: ["Malaysia", "Aminah", "kerusi", "Isnin"],
+        answer: 2,
+        explanation: "Kerusi ialah kata nama am yang merujuk benda secara umum."
+      },
+      {
+        q: "Yang manakah merupakan kata nama khas hidup manusia?",
+        options: ["doktor", "Encik Rahman", "kanak-kanak", "murid"],
+        answer: 1,
+        explanation: "Encik Rahman ialah nama khusus bagi manusia."
+      },
+      {
+        q: "Pilih kata nama khas bagi tempat.",
+        options: ["bandar", "kampung", "Kuala Terengganu", "hospital"],
+        answer: 2,
+        explanation: "Kuala Terengganu ialah nama khusus bagi sesuatu tempat."
+      },
+      {
+        q: "Perkataan 'burung' tergolong dalam kategori kata nama yang manakah?",
+        options: ["Kata nama khas", "Kata nama am", "Kata kerja", "Kata adjektif"],
+        answer: 1,
+        explanation: "Burung ialah kata nama am kerana merujuk haiwan secara umum."
+      },
+      {
+        q: "Yang manakah kata nama khas hidup bukan manusia?",
+        options: ["Si Comel", "arnab", "haiwan", "pokok"],
+        answer: 0,
+        explanation: "Si Comel boleh menjadi nama khusus yang diberikan kepada haiwan."
+      },
+      {
+        q: "Pilih ayat yang menggunakan kata nama khas dengan betul.",
+        options: [
+          "saya tinggal di johor.",
+          "Saya tinggal di Johor.",
+          "Saya Tinggal di johor.",
+          "saya Tinggal di Johor."
+        ],
+        answer: 1,
+        explanation: "Awal ayat menggunakan huruf besar dan nama khas Johor juga menggunakan huruf besar."
+      },
+      {
+        q: "Yang manakah kata nama am bagi manusia?",
+        options: ["Siti", "Raja Permaisuri Agong", "jururawat", "Encik Lim"],
+        answer: 2,
+        explanation: "Jururawat ialah kata nama am yang merujuk pekerjaan manusia."
+      },
+      {
+        q: "Perkataan 'Perpustakaan Negara Malaysia' ialah contoh...",
+        options: ["kata kerja", "kata adjektif", "kata nama khas", "kata nama am"],
+        answer: 2,
+        explanation: "Perpustakaan Negara Malaysia ialah nama khusus bagi sebuah institusi."
+      },
+      {
+        q: "Pilih kata nama am yang merujuk tempat.",
+        options: ["Kota Bharu", "Gunung Kinabalu", "pasar", "Tasik Kenyir"],
+        answer: 2,
+        explanation: "Pasar ialah kata nama am bagi tempat berniaga."
+      },
+      {
+        q: "Yang manakah kata nama khas bagi hari?",
+        options: ["hari", "minggu", "Ahad", "bulan"],
+        answer: 2,
+        explanation: "Ahad ialah nama khusus bagi hari dalam seminggu."
+      },
+      {
+        q: "Dalam ayat 'Adik membaca buku di ruang tamu', pilih kata nama am.",
+        options: ["membaca", "adik", "di", "dengan"],
+        answer: 1,
+        explanation: "Adik ialah kata nama am yang merujuk manusia. Buku dan ruang tamu juga kata nama am."
+      },
+      {
+        q: "Pilih pasangan kata nama khas yang betul.",
+        options: [
+          "sekolah, guru",
+          "Melaka, Farah",
+          "buku, pensel",
+          "kucing, arnab"
+        ],
+        answer: 1,
+        explanation: "Melaka dan Farah ialah nama khusus bagi tempat dan manusia."
+      },
+      {
+        q: "Apakah kata nama am dalam ayat 'Pak Ali membeli sebiji bola'?",
+        options: ["Pak Ali", "membeli", "sebiji", "bola"],
+        answer: 3,
+        explanation: "Bola ialah kata nama am yang merujuk benda."
+      },
+      {
+        q: "Perkataan 'Gunung Ledang' tergolong dalam kategori...",
+        options: ["kata nama am", "kata nama khas", "kata kerja", "kata hubung"],
+        answer: 1,
+        explanation: "Gunung Ledang ialah nama khusus bagi sebuah gunung."
+      },
+      {
+        q: "Pilih kata nama am yang merujuk haiwan.",
+        options: ["Sang Kancil", "Si Tompok", "harimau", "Kancil (nama watak)"],
+        answer: 2,
+        explanation: "Harimau ialah kata nama am bagi haiwan tersebut secara umum."
+      },
+      {
+        q: "Antara berikut, yang manakah BUKAN kata nama?",
+        options: ["meja", "berlari", "doktor", "sekolah"],
+        answer: 1,
+        explanation: "Berlari ialah kata kerja yang menunjukkan perbuatan."
+      },
+      {
+        q: "Dalam ayat 'Ravi belajar di Sekolah Menengah Seri Murni', yang manakah kata nama khas?",
+        options: ["belajar", "di", "Ravi", "menengah (secara umum)"],
+        answer: 2,
+        explanation: "Ravi ialah nama khusus bagi manusia. Sekolah Menengah Seri Murni juga merupakan kata nama khas."
+      },
+      {
+        q: "Pilih ayat yang mengandungi kata nama am.",
+        options: [
+          "Nadia pergi ke Perlis.",
+          "Encik Hassan membaca surat khabar.",
+          "Mereka melawat Muzium Negara.",
+          "Aiman tinggal di Ipoh."
+        ],
+        answer: 1,
+        explanation: "Surat khabar ialah kata nama am. Encik Hassan ialah kata nama khas."
+      },
+      {
+        q: "Apakah perbezaan utama kata nama am dengan kata nama khas?",
+        options: [
+          "Kata nama am sentiasa menunjukkan perbuatan.",
+          "Kata nama khas merujuk nama khusus, manakala kata nama am merujuk sesuatu secara umum.",
+          "Kata nama khas tidak menggunakan huruf besar.",
+          "Kata nama am hanya merujuk manusia."
+        ],
+        answer: 1,
+        explanation: "Kata nama khas menamakan sesuatu secara khusus, manakala kata nama am merujuk golongan atau benda secara umum."
+      }
+    ];
+
+    const form = document.getElementById("quizForm");
+    const container = document.getElementById("questionsContainer");
+    const formError = document.getElementById("formError");
+    const resultSection = document.getElementById("resultSection");
+    const submitButton = document.getElementById("submitButton");
+
+    let submitted = false;
+
+    // Paparkan semua soalan secara automatik.
+    function renderQuestions() {
+      container.innerHTML = questions.map((item, index) => `
+        <section id="card-${index}"
+          class="question-card bg-white rounded-2xl shadow-md p-5 md:p-6 border border-slate-100">
+          <div class="flex gap-3 items-start">
+            <span class="shrink-0 flex items-center justify-center rounded-xl bg-indigo-100 text-indigo-800 font-extrabold w-10 h-10">
+              ${index + 1}
+            </span>
+            <div class="flex-1">
+              <h3 class="font-bold text-lg leading-relaxed">
+                ${item.q}
+              </h3>
+              <div class="mt-4 space-y-3">
+                ${item.options.map((option, optionIndex) => `
+                  <label id="option-${index}-${optionIndex}"
+                    class="option-label flex items-start gap-3 rounded-xl border-2 border-slate-200 p-3 cursor-pointer hover:border-indigo-300">
+                    <input
+                      type="radio"
+                      name="q${index}"
+                      value="${optionIndex}"
+                      class="mt-1 accent-indigo-600"
+                    >
+                    <span>
+                      <strong>${String.fromCharCode(65 + optionIndex)}.</strong>
+                      ${option}
+                    </span>
+                  </label>
+                `).join("")}
+              </div>
+              <div id="feedback-${index}" class="hidden mt-4 rounded-xl p-3" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+      `).join("");
+    }
+
+    // Semak jawapan dan hasilkan keputusan serta sijil.
+    form.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      if (submitted) return;
+
+      const name = document.getElementById("studentName").value.trim();
+      const studentClass = document.getElementById("studentClass").value.trim();
+
+      if (!name || !studentClass) {
+        formError.textContent = "⚠️ Sila isi nama penuh dan kelas sebelum menghantar jawapan.";
+        formError.classList.remove("hidden");
+
+        const firstMissing = !name
+          ? document.getElementById("studentName")
+          : document.getElementById("studentClass");
+
+        firstMissing.focus();
+        return;
+      }
+
+      let unanswered = [];
+
+      questions.forEach((question, index) => {
+        const selected = form.querySelector(`input[name="q${index}"]:checked`);
+        if (!selected) unanswered.push(index + 1);
+      });
+
+      if (unanswered.length > 0) {
+        formError.textContent =
+          `⚠️ Anda belum menjawab soalan: ${unanswered.join(", ")}. Sila lengkapkan semua soalan.`;
+
+        formError.classList.remove("hidden");
+
+        const firstUnanswered = document.getElementById(`card-${unanswered[0]}`);
+        firstUnanswered.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+
+      formError.classList.add("hidden");
+
+      let score = 0;
+
+      questions.forEach((question, index) => {
+        const selected = form.querySelector(`input[name="q${index}"]:checked`);
+        const selectedAnswer = Number(selected.value);
+        const isCorrect = selectedAnswer === question.answer;
+        const feedback = document.getElementById(`feedback-${index}`);
+        const card = document.getElementById(`card-${index}`);
+
+        if (isCorrect) score++;
+
+        // Tandakan pilihan murid dan tunjuk jawapan yang betul.
+        question.options.forEach((option, optionIndex) => {
+          const optionLabel = document.getElementById(`option-${index}-${optionIndex}`);
+          const radio = optionLabel.querySelector("input");
+
+          radio.disabled = true;
+
+          if (optionIndex === question.answer) {
+            optionLabel.classList.add("correct");
+          } else if (optionIndex === selectedAnswer && !isCorrect) {
+            optionLabel.classList.add("incorrect");
+          }
+        });
+
+        feedback.classList.remove("hidden");
+
+        if (isCorrect) {
+          feedback.className = "mt-4 rounded-xl p-3 bg-green-50 text-green-800";
+          feedback.innerHTML =
+            `<strong>✅ Betul!</strong><p class="mt-1">${question.explanation}</p>`;
+        } else {
+          feedback.className = "mt-4 rounded-xl p-3 bg-red-50 text-red-800";
+          feedback.innerHTML =
+            `<strong>❌ Kurang tepat.</strong>
+             <p class="mt-1">Jawapan yang betul: <strong>${String.fromCharCode(65 + question.answer)}. ${question.options[question.answer]}</strong></p>
+             <p class="mt-1">${question.explanation}</p>`;
+        }
+      });
+
+      submitted = true;
+      submitButton.disabled = true;
+      submitButton.textContent = "✅ Kuiz Telah Disemak";
+      submitButton.classList.add("opacity-60", "cursor-not-allowed");
+
+      // Paparkan markah, peratus dan mesej pencapaian.
+      const percentage = Math.round((score / questions.length) * 100);
+
+      document.getElementById("resultEmoji").textContent =
+        percentage === 100 ? "🏆" :
+        percentage >= 80 ? "🌟" :
+        percentage >= 50 ? "👏" : "💪";
+
+      document.getElementById("resultGreeting").textContent =
+        `Syabas, ${name}! Terima kasih kerana menjawab kuiz ini.`;
+
+      document.getElementById("scoreText").textContent =
+        `${score}/${questions.length}`;
+
+      document.getElementById("percentageText").textContent =
+        `${percentage}%`;
+
+      document.getElementById("correctText").textContent = score;
+
+      let message;
+
+      if (percentage === 100) {
+        message = "Cemerlang! Semua jawapan anda betul! 🥇";
+      } else if (percentage >= 80) {
+        message = "Tahniah! Penguasaan anda sangat baik! 🌟";
+      } else if (percentage >= 50) {
+        message = "Bagus! Teruskan usaha dan tingkatkan pencapaian anda! 💪";
+      } else {
+        message = "Jangan putus asa! Ulang kaji kata nama dan cuba lagi. 📖";
+      }
+
+      document.getElementById("resultMessage").textContent = message;
+
+      // Maklumat sijil.
+      document.getElementById("certName").textContent = name;
+      document.getElementById("certClass").textContent = studentClass;
+      document.getElementById("certTopic").textContent = "Kata Nama";
+      document.getElementById("certScore").textContent =
+        `${score}/${questions.length} markah`;
+      document.getElementById("certPercentage").textContent =
+        `${percentage}%`;
+
+      const today = new Date();
+      document.getElementById("certDate").textContent =
+        "Tarikh: " + today.toLocaleDateString("ms-MY", {
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        });
+
+      resultSection.classList.remove("hidden");
+      resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    // Cetak sijil atau simpan sebagai PDF melalui pelayar.
+    document.getElementById("printButton").addEventListener("click", function() {
+      window.print();
+    });
+
+    // Tetapkan semula kuiz untuk percubaan baharu.
+    document.getElementById("retryButton").addEventListener("click", function() {
+      submitted = false;
+      form.reset();
+      renderQuestions();
+
+      submitButton.disabled = false;
+      submitButton.textContent = "✅ Hantar Jawapan & Semak Markah";
+      submitButton.classList.remove("opacity-60", "cursor-not-allowed");
+
+      resultSection.classList.add("hidden");
+      formError.classList.add("hidden");
+
+      document.getElementById("studentName").focus();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+
+    // Jana soalan apabila halaman dibuka.
+    renderQuestions();
+  </script>
+
+</body>
+</html>
